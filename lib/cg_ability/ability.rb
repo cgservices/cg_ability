@@ -3,6 +3,10 @@ module CgAbility
     include CanCan::Ability
     
     class << self
+      def engine
+        Rails::Engine.subclasses.first.instance
+      end
+
       def roles
         app_roles = Ability.load_roles
         app_roles['roles']
@@ -15,12 +19,12 @@ module CgAbility
 
       def roles_map
         roles_map = Ability.load_roles_map
-        roles_map[Engine.name]
+        roles_map[Rails::Engine.subclasses.first.to_s]
       end
 
-      def load_roles(file=Engine.config.roles_yml)
+      def load_roles(file=engine.config.roles_yml)
         begin
-          @@roles ||= YAML.load_file("#{Engine.root}/config/#{file}")
+          @@roles ||= YAML.load_file("#{engine.root}/config/#{file}")
         rescue
           raise "You need to define a roles.yml in your engine/config"
         end
