@@ -1,1 +1,1 @@
-require 'cg_abitlity'
+require 'cg_ability'
