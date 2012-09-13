@@ -4,6 +4,7 @@ module CgAbility
   module Generators
     class InstallGenerator < Rails::Generators::Base
       class_option "current-user-helper", :type => :string
+      class_option "current-engine-helper", :type => :string
 
       desc "Used to install CG Ability"
 
@@ -11,16 +12,21 @@ module CgAbility
         @source_root ||= File.expand_path('../templates', __FILE__)
       end
 
-      def engine
-        Rails::Engine.subclasses.first.instance
-      end
-      
-      def engine_root_path
-        engine.root
+      def determine_current_engine_helper
+        current_engine_helper = options["current-engine-helper"].presence ||
+                                ask("What is the name of your engine (this is ussually the name of your module? [Engine]").presence ||
+                                "Engine"
+        @engine_name = "#{current_engine_helper}::Engine"
+
+        if engine = Rails::Engine.subclasses.detect{|e| e.to_s == @engine_name}
+          @engine = engine.instance
+        else
+         raise "Could not find given Engine. Please check the Engine name and try again."
+        end
       end
 
       def application_controler_path
-        File.join engine_root_path, engine.paths["app/controllers"] ,engine.railtie_namespace.to_s.downcase, 'application_controller.rb'
+        File.join @engine.root, @engine.paths["app/controllers"], @engine.railtie_namespace.to_s.downcase, 'application_controller.rb'
       end
 
       def determine_current_user_helper
@@ -32,7 +38,7 @@ module CgAbility
 
         ability_methods = %Q{
     def current_ability
-      CgAbility::Ability.new(engine_user)
+      CgAbility::Ability.new(engine_user, "#{@engine_name}")
     end
 
     def engine_user
@@ -47,7 +53,7 @@ module CgAbility
       end
 
       def add_dependencies_initializer
-        path = "#{engine_root_path}/config/initializers/_dependencies.rb"
+        path = "#{@engine.root}/config/initializers/_dependencies.rb"
         if File.exists?(path)
           puts "Skipping config/initializers/_dependencies.rb creation. Make sure you add\n require 'cg_ability'\nto your dependencies."
         else
