@@ -4,7 +4,7 @@ module CgAbility
     
     class << self
       def engine
-        Rails::Engine.subclasses.first.instance
+        Rails::Engine.subclasses.detect{|e| e.to_s == @@engine_name}.instance
       end
 
       def roles
@@ -19,12 +19,13 @@ module CgAbility
 
       def roles_map
         roles_map = Ability.load_roles_map
-        roles_map[Rails::Engine.subclasses.first.to_s]
+        roles_map[@@engine_name]
       end
 
       def load_roles(file=engine.config.roles_yml)
         begin
-          @@roles ||= YAML.load_file("#{engine.root}/config/#{file}")
+          #@@roles ||= 
+          YAML.load_file("#{engine.root}/config/#{file}")
         rescue
           raise "You need to define a roles.yml in your engine/config"
         end
@@ -32,14 +33,16 @@ module CgAbility
 
       def load_roles_map(file=Rails.application.config.engines_roles_map_yml)
         begin
-          @@roles_map ||= YAML.load_file("#{Rails.root}/config/#{file}")
+          #@@roles_map ||= 
+          YAML.load_file("#{Rails.root}/config/#{file}")
         rescue
           raise "You need to define a engine roles mapping in you application/config"
         end
       end
     end
 
-    def initialize(user)
+    def initialize(user, engine_name)
+      @@engine_name = "#{engine_name}::Engine"
       return nil if user.blank?
       return nil unless mapped_role = Ability.roles_map[user.role.to_s]
       return nil unless permissions = Ability.permissions[mapped_role]
