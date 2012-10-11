@@ -5,7 +5,7 @@ A Gem for engine authorization. This gem extends the functionality of CanCan aut
 ### Specify dependency in your Gemfile
 gem 'cg_ability', :git => "https://github.com/cgservices/cg_ability.git"
 
-### Run the installer
+### Run the installer (from the dummy app)
     rails g cg_ability:install
 
 #### Installing CgAbility
@@ -20,6 +20,20 @@ After install you will have 2 new functions in your Engine's application control
 ### Requirements
 CG Ability adds functions to your ApplicationController to identify the User from the Main Application. It asumes that your Main Application implements current_user for identifying the user that is logged in.
 
+#### User model
+Assuming your Engine doesn't have a user model you need to define where CgAbility can find the User class. You can do this by adding the following code to your lib/engine.rb
+    mattr_accessor :user_class
+  
+    class << self
+      def user_class
+        if @@user_class.is_a?(Class)
+          raise "Please use a string instead of Class."
+        elsif @@user_class.is_a?(String)
+          @@user_class.constantize
+        end
+      end
+    end
+    
 ### Usage
 CG Ability looks in Engine.root/config for the yaml file defined in Engine.config.roles_yml. If this file is not found then Error will be raised.
 
