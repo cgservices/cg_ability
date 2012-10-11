@@ -16,7 +16,7 @@ module CgAbility
         current_engine_helper = options["current-engine-helper"].presence ||
                                 ask("What is the name of your engine (this is ussually the name of your module? [Engine]").presence ||
                                 "Engine"
-        @engine_name = "#{current_engine_helper}::Engine"
+        @engine_name = "#{current_engine_helper}"
 
         if engine = Rails::Engine.subclasses.detect{|e| e.to_s == @engine_name}
           @engine = engine.instance
